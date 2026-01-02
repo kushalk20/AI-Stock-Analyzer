@@ -1,0 +1,8 @@
+python==3.12.12
+crewai==1.7.2
+crewai-tools==1.7.2
+yfinance==0.2.66
+yahooquery==2.4.1
+python-dotenv==1.1.1
+fastapi==0.123.10
+uvicorn[standard]==0.32.0

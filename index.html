@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Stock Analyzer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 40px;
+    }
+    .container { max-width: 1000px; margin: auto; }
+    h1 { margin-bottom: 8px; }
+    p.muted { color: #94a3b8; margin-top: 0; }
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    .suggestions { background: #020617; border-radius: 8px; margin-top: 6px; }
+    .suggestion { padding: 10px; cursor: pointer; }
+    .suggestion:hover { background: #1e293b; }
+    button {
+      margin-top: 12px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #22c55e;
+      color: black;
+    }
+    button:disabled { background: #64748b; cursor: not-allowed; }
+    .section {
+      margin-top: 28px;
+      background: #020617;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .section h2 {
+      margin-top: 0;
+      font-size: 24px;
+      color: #38bdf8;
+    }
+    .card {
+      background: #0b1220;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .loading { color: #38bdf8; margin-top: 12px; }
+    .error { color: #fb7185; margin-top: 12px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 8px; line-height: 1.6; }
+    strong { color: #facc15; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📈 AI Stock Analyzer</h1>
+  <p class="muted">Search a company, then analyze to see financials, latest news, and an AI recommendation.</p>
+
+  <input id="searchInput" type="text" placeholder="Type company name (e.g., Maruti, Apple, Tesla)" />
+  <div id="suggestions" class="suggestions"></div>
+  <button id="submitBtn" disabled>Analyze</button>
+
+  <div id="loading" class="loading"></div>
+  <div id="error" class="error"></div>
+
+  <div id="financials" class="section"></div>
+  <div id="news" class="section"></div>
+  <div id="recommendation" class="section"></div>
+</div>
+
+<script>
+  const searchInput = document.getElementById("searchInput");
+  const suggestionsDiv = document.getElementById("suggestions");
+  const submitBtn = document.getElementById("submitBtn");
+  const loadingDiv = document.getElementById("loading");
+  const errorDiv = document.getElementById("error");
+  const financialsDiv = document.getElementById("financials");
+  const newsDiv = document.getElementById("news");
+  const recommendationDiv = document.getElementById("recommendation");
+
+  let selectedCompany = "";
+
+  let debounce;
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.trim();
+    selectedCompany = "";
+    submitBtn.disabled = true;
+    suggestionsDiv.innerHTML = "";
+    errorDiv.textContent = "";
+
+    if (q.length < 2) return;
+
+    clearTimeout(debounce);
+    debounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        suggestionsDiv.innerHTML = "";
+        data.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "suggestion";
+          div.textContent = `${item.name} (${item.symbol})`;
+          div.onclick = () => {
+            selectedCompany = item.name;
+            searchInput.value = item.name;
+            suggestionsDiv.innerHTML = "";
+            submitBtn.disabled = false;
+          };
+          suggestionsDiv.appendChild(div);
+        });
+      } catch (e) {
+        errorDiv.textContent = "Failed to fetch suggestions.";
+      }
+    }, 200);
+  });
+
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !submitBtn.disabled) {
+      submitBtn.click();
+    }
+  });
+
+  submitBtn.addEventListener("click", async () => {
+    if (!selectedCompany) return;
+
+    loadingDiv.textContent = "⏳ Running AI analysis...";
+    errorDiv.textContent = "";
+    financialsDiv.innerHTML = "";
+    newsDiv.innerHTML = "";
+    recommendationDiv.innerHTML = "";
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch(`/analyze?company=${encodeURIComponent(selectedCompany)}`);
+      const data = await res.json();
+
+      renderSection(financialsDiv, "📊 Financial Information", data.financials);
+      renderSection(newsDiv, "📰 Latest News", data.news);
+      renderSection(recommendationDiv, "📈 Investment Recommendation", data.recommendation);
+
+    } catch (e) {
+      errorDiv.textContent = "Analysis failed.";
+    } finally {
+      loadingDiv.textContent = "";
+      submitBtn.disabled = false;
+    }
+  });
+
+  function renderSection(container, title, content) {
+    container.innerHTML = `<h2>${title}</h2>`;
+    if (!content) {
+      container.innerHTML += `<p>No data available.</p>`;
+      return;
+    }
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    // Normalize content
+    let text = typeof content === "string" ? content : content.raw || JSON.stringify(content, null, 2);
+
+    // Convert **bold** to <strong>
+    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+    // Convert bullets and indentation
+    const lines = text.split("\n").filter(l => l.trim().length > 0);
+    let html = "";
+    let inList = false;
+
+    lines.forEach(line => {
+      if (/^\s*[-*•]/.test(line)) {
+        if (!inList) {
+          html += "<ul>";
+          inList = true;
+        }
+        html += `<li>${line.replace(/^[-*•]\s*/, "")}</li>`;
+      } else {
+        if (inList) {
+          html += "</ul>";
+          inList = false;
+        }
+        html += `<p>${line}</p>`;
+      }
+    });
+
+    if (inList) html += "</ul>";
+
+    card.innerHTML = html;
+    container.appendChild(card);
+  }
+</script>
+</body>
+</html>
