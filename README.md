@@ -1,5 +1,4 @@
 
-<div align="center">
 
 # 📈 AI Stock Analyzer
 
@@ -12,7 +11,6 @@
 
 **AI-powered stock research platform** that analyzes company news, financials, and delivers **Buy/Sell/Hold** recommendations using CrewAI multi-agent system and Llama 3.3 70B.
 
-</div>
 
 ## 🚀 Features
 
