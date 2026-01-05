@@ -4,7 +4,7 @@
 
 
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.7.2-orange?logo=crewai&logoColor=white)](https://crewai.com)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-brightgreen?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.123.10-brightgreen?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Inference-blueviolet?logo=huggingface&logoColor=white)](https://huggingface.co)
 [![Llama](https://img.shields.io/badge/Llama-3.3_70B-yellow?logo=llama&logoColor=white)](https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct)
 [![YahooFinance](https://img.shields.io/badge/YahooFinance-Data-blue?logo=yahoo&logoColor=white)](https://finance.yahoo.com)
