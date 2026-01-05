@@ -1,4 +1,4 @@
-python==3.12.12
+# Note: Python version used 3.12.12
 crewai==1.7.2
 crewai-tools==1.7.2
 yfinance==0.2.66
